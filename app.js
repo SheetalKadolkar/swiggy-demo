@@ -1,0 +1,16 @@
+const express=require('express');
+const bodyParser=require('body-parser');
+const cors=require('cors');
+const app=express();
+app.use(cors());
+app.use(bodyParser.json());
+const PORT=process.env.PORT||3000;
+const restaurants=[{id:1,name:"Sample Bites",menu:[{id:101,name:"Pizza",price:199},{id:102,name:"Pasta",price:149}]},{id:2,name:"Tasty Treats",menu:[{id:201,name:"Burger",price:99},{id:202,name:"Fries",price:59}]}];
+let orders=[];let nextOrderId=1;
+app.get('/',(req,res)=>res.send("Swiggy-Demo API"));
+app.get('/restaurants',(req,res)=>res.json(restaurants.map(r=>({id:r.id,name:r.name}))));
+app.get('/restaurants/:id/menu',(req,res)=>{const r=restaurants.find(x=>x.id===parseInt(req.params.id));if(!r)return res.status(404).json({error:"Restaurant not found"});res.json(r.menu);});
+app.post('/orders',(req,res)=>{const{restaurantId,items,customer}=req.body;if(!restaurantId||!items||items.length===0)return res.status(400).json({error:"Invalid order"});const order={id:nextOrderId++,restaurantId,items,customer:customer||{},status:'PLACED',createdAt:new Date().toISOString()};orders.push(order);res.status(201).json(order);});
+app.get('/orders/:id',(req,res)=>{const o=orders.find(x=>x.id===parseInt(req.params.id));if(!o)return res.status(404).json({error:"Order not found"});res.json(o);});
+app.get('/orders',(req,res)=>res.json(orders));
+app.listen(PORT,()=>console.log("API on "+PORT));
